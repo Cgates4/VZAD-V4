@@ -3,7 +3,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft, fftfreq
-from scipy.interpolate import UnivariateSpline
 
 yes = ["y", "yes", "Y", "YES", "Yes"]
 no = ["n", "no", "N", "NO", "No"]
@@ -268,40 +267,12 @@ while True:
         fft_points = len(O2ExpNormalized)
         x = np.linspace(0, fft_points, endpoint=False)  #x axis indicators
         x_fft = fftfreq(fft_points)[:fft_points // 2]  #make x axis to be half of number of values
-        y_fft = abs(fft(O2ExpNormalized).real)[1:len(x_fft)+1]
-        y_fft = y_fft - min(y_fft)# fft on data
+        y_fft = fft(O2ExpNormalized)  # fft on data
         with open('FFT.txt', 'w') as f:
-            for n in range(0,len(x_fft)):
+            for n in range(1,len(x_fft)):
                 f.write(f"{x_fft[n]} \t {y_fft[n]}\n")
-        fig2 = plt.figure()
-        ax2 = fig2.add_subplot(111)
-        spline = UnivariateSpline(x_fft, y_fft, s=0.15)
-        xs = x_fft
-        xs2 = np.linspace(0, 0.5, 1000)
-        ax2.plot(xs2, spline(xs2), label="spline")
-        ax2.plot(xs, y_fft, label="raw")
-        with open('FFTspline.txt', 'w') as f:
-            for n in range(0,len(xs2)):
-                f.write(f"{xs2[n]} \t {spline(xs2)[n]}\n")
-        halfmax = max(spline(xs2))/2
-        ftct = 500
-        lobo = 0.0
-        upbo = 0.5
-        fhmf = 0.0
-        counter = 0
-        for counter in range(0, len(spline(xs2)), 1):
-            if spline(xs2)[counter] > fhmf:
-                fhmf = spline(xs2)[counter]
-                ftct = counter
-        for counter in range(ftct, 0, -1):
-            if spline(xs2)[counter] > halfmax:
-                lobo = counter/2000
-        for counter in range(ftct, 1000, 1):
-            if spline(xs2)[counter] > halfmax:
-                upbo = counter/2000
 
         fig1.savefig("figVZADPython" + alg + ".png", dpi=300)
-        fig2.savefig("figSplineFFT" + alg + ".png", dpi=300)
 
         fileSim = open("O2simulated" + alg + ".txt", "w")
         for i in range(len(SimOpt.Sim)):
@@ -325,11 +296,8 @@ while True:
         fileParams.write("S2\t" + str(Sopt[2]) + "\n")
         fileParams.write("S3\t" + str(Sopt[3]) + "\n")
         fileParams.write("Senorm\t" + str(SoptNorm[4]) + "\n")
-        fileParams.write("\n")
-        fileParams.write("FWHM\t" + str(upbo-lobo) + "\n")
 
         fileParams.close()
-        plt.close()
     elif splitData == 1:
         O2Exp1 = [O2Exp[i] for i in range(nFlashes1)]
         O2Exp2 = [O2Exp[i] for i in range(nFlashes1, nFlashesTot)]
@@ -424,7 +392,6 @@ while True:
         fileParams.write("delta2\t" + str(paramsOpt2[2]) + "\n")
         fileParams.write("epsilon2\t" + str(paramsOpt2[3]) + "\n")
         fileParams.close()
-        plt.close()
 
     again = str(input('Do you want to run another file?\n'))
     os.chdir('..')
